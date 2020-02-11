@@ -68,8 +68,7 @@ tsc = signalcontainer(logsout);
 %% Plot some things
 basisParams = [azimuthSweep, elevationSweep, meanAzimuth, meanElevation, radius];
 path        = lemOfGerono(linspace(0,1),basisParams);
-plot3(tsc.posVec.Data(:,1),tsc.posVec.Data(:,2),tsc.posVec.Data(:,3),...
-    'LineWidth',1,'Color','b','LineStyle','-','DisplayName','Flight Path')
+tsc.test.plot3('LineWidth',1,'Color','b','LineStyle','-','DisplayName','Flight Path')
 daspect([1 1 1])
 hold on
 grid on

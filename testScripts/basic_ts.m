@@ -6,7 +6,7 @@
 clear;close all
 
 %% Simulation Options
-T = 200; % Simulation duration
+T = 100; % Simulation duration
 
 %% Kite properties
 % Physical properties
@@ -14,7 +14,7 @@ baseMass        = 6184;
 addedMass       = 739.6;
 baseInertia     = 80302;%104850;
 addedInertia    = 0;%724530;
-buoyFactor      = 1;
+buoyFactor      = 1.05;
 ARefWing        = 20;
 ARefRudder      = 1.875;
 ARefElevator    = 1.875;
@@ -27,12 +27,12 @@ wingTable       = buildAirfoilTable('wing',wingOE,wingAR);
 rudderTable     = buildAirfoilTable('rudder',wingOE,wingAR);
 
 % Initial Conditions
-radius = 100;
-initSpeed = 2;
-initAzimuth = -5*pi/180;
-initElevation = 30*pi/180;
-initTwist = 0*pi/180;
-initTwistRate = 0;
+radius          = 100;
+initSpeed       = 2;
+initAzimuth     = 0.01*pi/180;
+initElevation   = 29.99*pi/180;
+initTwist       = -22.5*pi/180;
+initTwistRate   = 0;
 
 %% Water properties
 flowSpeed   = 1;
@@ -42,6 +42,8 @@ density     = 1000;
 tauRef          = 0.025; % reference model time constant (s)
 azimuthSweep    = 60; % Path azimuth sweep angle, degrees
 elevationSweep  = 10; % Path elevation sweep angle, degrees
+refGain1        = 1/tauRef^2;
+refGain2        = 2/tauRef;
 meanAzimuth     = 0;
 meanElevation   = 30;
 initPathVar     = 0;
@@ -59,7 +61,7 @@ rudderAlphaMinusStall   = -6*pi/180;
 
 %% Run the simulation
 tic
-sim('unifoil')
+sim('unifoil');
 fprintf('Sim Efficiency: %.1f x Real Time\n',T/toc)
 
 %% Post-process Data (get it into a signalcontainer object)
@@ -68,7 +70,7 @@ tsc = signalcontainer(logsout);
 %% Plot some things
 basisParams = [azimuthSweep, elevationSweep, meanAzimuth, meanElevation, radius];
 path        = lemOfGerono(linspace(0,1),basisParams);
-tsc.test.plot3('LineWidth',1,'Color','b','LineStyle','-','DisplayName','Flight Path')
+tsc.posVec.plot3('LineWidth',1,'Color','b','LineStyle','-','DisplayName','Flight Path')
 daspect([1 1 1])
 hold on
 grid on
@@ -77,3 +79,6 @@ plot3(path(:,1),path(:,2),path(:,3),...
     'LineWidth',2,'Color','r','LineStyle',':','DisplayName','Target Path')
 view(84,40)
 legend
+
+figure
+tsc.pathVar.plot

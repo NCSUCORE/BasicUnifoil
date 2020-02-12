@@ -6,7 +6,7 @@
 clear;close all
 
 %% Simulation Options
-T = 100; % Simulation duration
+T = 500; % Simulation duration
 
 %% Kite properties
 % Physical properties
@@ -28,7 +28,7 @@ rudderTable     = buildAirfoilTable('rudder',wingOE,wingAR);
 
 % Initial Conditions
 radius          = 100;
-initSpeed       = 2;
+initSpeed       = 5.735;
 initAzimuth     = 0.01*pi/180;
 initElevation   = 29.99*pi/180;
 initTwist       = -22.5*pi/180;
@@ -66,6 +66,11 @@ fprintf('Sim Efficiency: %.1f x Real Time\n',T/toc)
 
 %% Post-process Data (get it into a signalcontainer object)
 tsc = signalcontainer(logsout);
+
+%% Find first time step of second lap
+tIndx = find(and(tsc.pathVar.Data(1:end-1)>0.99,tsc.pathVar.Data(2:end)<0.01));
+tVal  = tsc.pathVar.Time(tIndx(1));
+tsc.crop([0 tVal]);
 
 %% Plot some things
 basisParams = [azimuthSweep, elevationSweep, meanAzimuth, meanElevation, radius];

@@ -12,7 +12,7 @@ T = 500; % Simulation duration
 % Physical properties
 baseMass        = 6184;
 addedMass       = 739.6;
-baseInertia     = 80302;%104850;
+baseInertia     = 10000;%80302;%104850;
 addedInertia    = 0;%724530;
 buoyFactor      = 1.05;
 ARefWing        = 20;
@@ -30,8 +30,8 @@ rudderTable     = buildAirfoilTable('rudder',wingOE,wingAR);
 radius          = 100;
 initSpeed       = 5.735;
 initAzimuth     = 0.01*pi/180;
-initElevation   = 29.99*pi/180;
-initTwist       = -22.5*pi/180;
+initElevation   = 20*pi/180;
+initTwist       = 0;%-22.5*pi/180;
 initTwistRate   = 0;
 
 %% Water properties
@@ -39,13 +39,18 @@ flowSpeed   = 1;
 density     = 1000;
 
 %% Controller parameters
+% Path geometry
+azimuthSweep    = 60*pi/180; % Path azimuth sweep angle, degrees
+elevationSweep  = 10*pi/180; % Path elevation sweep angle, degrees
+meanAzimuth     = 0*pi/180;
+meanElevation   = 30*pi/180;
+basisParams = [azimuthSweep, elevationSweep, meanAzimuth, meanElevation, radius];
+% Reference model
 tauRef          = 0.025; % reference model time constant (s)
-azimuthSweep    = 60; % Path azimuth sweep angle, degrees
-elevationSweep  = 10; % Path elevation sweep angle, degrees
+% Model Ref Ctrl Gains
 refGain1        = 1/tauRef^2;
 refGain2        = 2/tauRef;
-meanAzimuth     = 0;
-meanElevation   = 30;
+% Pure Pursuit Controller
 initPathVar     = 0;
 maxLeadLength   = 0.01;
 maxIntAngle     = 3*pi/180;
@@ -67,11 +72,6 @@ fprintf('Sim Efficiency: %.1f x Real Time\n',T/toc)
 %% Post-process Data (get it into a signalcontainer object)
 tsc = signalcontainer(logsout);
 
-%% Find first time step of second lap
-tIndx = find(and(tsc.pathVar.Data(1:end-1)>0.99,tsc.pathVar.Data(2:end)<0.01));
-tVal  = tsc.pathVar.Time(tIndx(1));
-tsc.crop([0 tVal]);
-
 %% Plot some things
 basisParams = [azimuthSweep, elevationSweep, meanAzimuth, meanElevation, radius];
 path        = lemOfGerono(linspace(0,1),basisParams);
@@ -87,3 +87,11 @@ legend
 
 figure
 tsc.pathVar.plot
+
+figure
+tsc.twistSP.plot
+hold on
+grid on
+tsc.twistDes.plot
+tsc.twistAngle.plot
+

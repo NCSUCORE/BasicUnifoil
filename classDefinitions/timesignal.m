@@ -101,6 +101,29 @@ classdef timesignal < timeseries
             end
         end
         
+        function plotEigs(obj)
+           for ii = 1:numel(obj.Time)
+               [V,D] = eig(obj.getdatasamples(ii));
+               eVals(:,:,ii) = diag(D);
+               eVecs(:,:,ii) = V;
+           end
+           eValsTS = timesignal(timeseries(eVals,obj.Time));
+           eVecsRealTS = timesignal(timeseries(real(eVecs),obj.Time));
+           eVecsImagTS = timesignal(timeseries(imag(eVecs),obj.Time));
+           for ii = 1:numel(eValsTS.getdatasamples(1))
+               plot3(eValsTS.Time,squeeze(real(eValsTS.Data(ii,:))),squeeze(imag(eValsTS.Data(ii,:))))
+               hold on
+           end
+           xlabel('Path Var')
+           ylabel('Re')
+           zlabel('Im')
+           grid on
+           figure
+           eVecsRealTS.plot
+           figure
+           eVecsImagTS.plot
+        end
+        
         %Plots the magnitude of a given signal. Assumes vectors have a
         %length of 3 unless given a vector Dimention.
         function varargout = plotMag(obj,varargin)

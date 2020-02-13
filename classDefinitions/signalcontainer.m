@@ -14,7 +14,7 @@ classdef signalcontainer < dynamicprops
             addParameter(p,'Verbose',true,@islogical);
             parse(p,varargin{:});
             switch class(objToParse)
-                case {'Simulink.SimulationData.Dataset','Simulink.sdi.DatasetRef'}
+                case {'Simulink.SimulationData.Dataset','Simulink.sdi.DatasetRef','signalcontainer'}
                     % Add metadata to the signal container at highest level
                     obj.addprop('metaData');
                     obj.metaData = metaData(p.Results.Verbose);
@@ -59,6 +59,8 @@ classdef signalcontainer < dynamicprops
                             end
                         end
                     end
+%                 case 'signalcontainer'
+%                     x = 1;
                 otherwise
                     error('Unknown data type to parse')
             end

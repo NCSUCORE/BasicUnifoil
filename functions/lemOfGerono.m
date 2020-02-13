@@ -13,10 +13,10 @@ function gndPos = lemOfGerono(pathVar,geomParams)
 %   Variable names here were chosen to match the notebook
 %   lemOfGeronoTanVec.nb
 
-A0 = geomParams(1)*pi/180;
-Z0 = geomParams(2)*pi/180;
-A1 = geomParams(3)*pi/180;
-Z1 = geomParams(4)*pi/180;
+A0 = geomParams(1);
+Z0 = geomParams(2);
+A1 = geomParams(3);
+Z1 = geomParams(4);
 R  = geomParams(5);
 
 % Calculate path position in rad, phi from the normalized path variable, s.
@@ -24,7 +24,8 @@ phi = (pathVar(:)*2+3/2)*pi;
 
 % Calculate azimuth and zenith in degrees
 a =         (A0/2)*cos(  phi(:)) + A1;
-z = (pi/2)-((Z0/2)*sin(2*phi(:)) + Z1);
+% z = (pi/2)-((Z0/2)*sin(2*phi(:)) + Z1);
+z = (pi/2)-((Z0/2)*sin(  phi(:)) + Z1);
 
 % Convert sphereical to cartesian
 % http://mathworld.wolfram.com/SphericalCoordinates.html

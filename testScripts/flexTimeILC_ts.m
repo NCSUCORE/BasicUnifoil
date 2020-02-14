@@ -80,9 +80,11 @@ ctrlInputTol     = 0.5*pi/180;
 wyPtPosVecs     = lemOfGerono(posWayPtPathVars,basisParams);
 wyPtAzimuth     = atan2(wyPtPosVecs(:,2),wyPtPosVecs(:,1));
 wyPtElevation   = pi/2-acos(wyPtPosVecs(:,3)./sqrt(sum(wyPtPosVecs.^2,2)));
-TPhi    = wyptAzimuthTol*ones(size(wyPtAzimuth));
-TTheta  = wyptElevationTol*ones(size(wyPtElevation));
+r               = reshape([wyPtAzimuth(:),wyPtElevation(:)]',[2*numel(posWayPtPathVars) 1]);
 
+spedWeight = 0/(1.0731e+03);
+wyptWeight = 0/(3.0219e-04); % Weight on waypoint tracking in performance index
+inptWeight = 100/246.5219;
 % % Plot the modeled Fx, sanity check
 % twist = linspace(-180,180)*pi/180;
 % az    = linspace(-80,80)*pi/180;
@@ -123,43 +125,46 @@ tscPath = tscPath.resample(0:pathStep:1);
 [F,G] = lift(Adp,Bdp);
 
 % Build the weighting matrix for the performance index
-J = ones(1,numel(tscPath.rudderCmd.Time))*stateSelectionMatrix(3,5,numel(Adp.Time))*G;
-Qphi   = wyptSelectionMatrix(1,5,...
-    cnvrtPathVar2Indx(posWayPtPathVars,tscPath.pathVar.Data),...
-    numel(tscPath.pathVar.Data));
-Qtheta = wyptSelectionMatrix(2,5,...
-    cnvrtPathVar2Indx(posWayPtPathVars,tscPath.pathVar.Data),...
-    numel(tscPath.pathVar.Data));
+Psiv = stateSelectionMatrix(3,5,numel(Adp.Time));
+f    = spedWeight*ones(1,size(Psiv,1));
+posWayPtPathIdx = cnvrtPathVar2Indx(posWayPtPathVars,Adp.Time);
+PsiW = wyptSelectionMatrix([1 2],posWayPtPathIdx,5,numel(Adp.Time))*stateSelectionMatrix([1 2],5,numel(Adp.Time));
+QW = wyptWeight*diag(ones(size(PsiW,1),1));
+Qu = inptWeight*diag(ones(numel(tscPath.twistSP.Data),1));
+L0Inv = (G'*PsiW'*QW*PsiW*G+Qu)^(-1);
+f0    = -(1/2)*f*Psiv*G;
+L1    = -(G'*PsiW'*QW*PsiW*G-Qu);
+L2    = -G'*PsiW'*QW;
 
-% Setup large A and b matrices that we need for linprog
-x0      = tscPath.stateVec.getdatasamples(1);
-ALP     = [Qphi*G; -Qphi*G; Qtheta*G; -Qtheta*G];
-b0LP    = [TPhi;TPhi;TTheta;TTheta];
-b1LP    = [-Qphi*F*x0(:); Qphi*F*x0(:) ; -Qtheta*F*x0(:); Qtheta*F*x0(:) ];
-bLP     = b0LP - b1LP;
+% Calculate specific terms in the performance index, useful for tuning
+Jv = f*Psiv*tscPath.stateVec.Data(:); % First term, sum of speeds
+JW = (PsiW*tscPath.stateVec.Data(:)-r)'*QW*(PsiW*tscPath.stateVec.Data(:)-r);
+% Calculate the new control input
+uNext = L0Inv*f0'-L0Inv*L1*tscPath.twistSP.Data(:)+L0Inv*L2*(PsiW*tscPath.stateVec.Data(:)-r);
 
-% Run linprog to get the update to the control input
-duStar = linprog(J,ALP,bLP);
+% Calculate last term in performance index
+Ju = (uNext-tscPath.twistSP.Data(:))'*Qu*(uNext-tscPath.twistSP.Data(:));
 
-% ILC Update
-uNext = uPrev + duStar; % uPrev should be the ILC term from the last iteration
+% Build path domain timeseries
+uNext = timesignal(timeseries(uNext,tscPath.pathVar.Data));
 
-% Create new control input by adding perturbation to 
-uNew = timesignal(timeseries(uNext,tscPath.pathVar.Data));
+tscPath.twistSP.plot
+hold on
+uNext.plot
 
-
+% THERE ARE SOME SIGNS FLIPPED HERE SOMEWHERE.  CHECK THE MATH
 
 %% Plot some things
-path        = lemOfGerono(linspace(0,1),basisParams);
-tscTime.posVec.plot3('LineWidth',1,'Color','b','LineStyle','-','DisplayName','Flight Path')
-daspect([1 1 1])
-hold on
-grid on
-scatter3(0,0,0,'MarkerFaceColor','k','MarkerEdgeColor','k','DisplayName','Origin')
-plot3(path(:,1),path(:,2),path(:,3),...
-    'LineWidth',2,'Color','r','LineStyle',':','DisplayName','Target Path')
-view(84,40)
-legend
-
-figure
-tsc.pathVar.plot
+% path        = lemOfGerono(linspace(0,1),basisParams);
+% tscTime.posVec.plot3('LineWidth',1,'Color','b','LineStyle','-','DisplayName','Flight Path')
+% daspect([1 1 1])
+% hold on
+% grid on
+% scatter3(0,0,0,'MarkerFaceColor','k','MarkerEdgeColor','k','DisplayName','Origin')
+% plot3(path(:,1),path(:,2),path(:,3),...
+%     'LineWidth',2,'Color','r','LineStyle',':','DisplayName','Target Path')
+% view(84,40)
+% legend
+% 
+% figure
+% tsc.pathVar.plot

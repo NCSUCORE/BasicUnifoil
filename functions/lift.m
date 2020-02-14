@@ -1,4 +1,4 @@
-function [F,G] = lift(A,B)
+amafunction [F,G] = lift(A,B)
 % function gives F and G in the (equivalent) expressions
 % deltax = F*deltax0 + G*deltau
 % x = x0 + F*deltax0 + G*deltau

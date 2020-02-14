@@ -1,1 +1,0 @@
-(-2).*pi.*cos(psi).*cot(2.*pi.*s).*(cos(psi)+sin(psi)).^(-1);

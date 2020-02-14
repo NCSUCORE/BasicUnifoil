@@ -14,22 +14,27 @@ function gndPos = lemOfGerono(pathVar,geomParams)
 %   lemOfGeronoTanVec.nb
 
 A0 = geomParams(1);
-Z0 = geomParams(2);
+E0 = geomParams(2);
 A1 = geomParams(3);
-Z1 = geomParams(4);
+E1 = geomParams(4);
 R  = geomParams(5);
+freqMult = geomParams(6);
 
-% Calculate path position in rad, phi from the normalized path variable, s.
-phi = (pathVar(:)*2+3/2)*pi;
+pathVar = pathVar(:);
 
-% Calculate azimuth and zenith in degrees
-a =         (A0/2)*cos(  phi(:)) + A1;
-% z = (pi/2)-((Z0/2)*sin(2*phi(:)) + Z1);
-z = (pi/2)-((Z0/2)*sin(  phi(:)) + Z1);
+% Calculate azimuth, elevation, and zenith
+a =  (A0/2)*sin(          2*pi*pathVar) + A1;
+if freqMult == 1 % Ellipse
+    e = -(E0/2)*cos(2*pi*pathVar) + E1;
+else % Fig 8
+    e = -(E0/2)*sin(4*pi*pathVar) + E1;
+end
+z =  (pi/2) - e;
 
+% plot(a,e)
 % Convert sphereical to cartesian
 % http://mathworld.wolfram.com/SphericalCoordinates.html
-gndPos = nan(numel(phi),3);
+gndPos = nan(numel(pathVar),3);
 
 gndPos(:,1) = R.*cos(a).*sin(z);
 gndPos(:,2) = R.*sin(a).*sin(z);

@@ -6,7 +6,7 @@
 clear;close all
 
 %% Simulation Options
-T = 500; % Simulation duration
+T = 50; % Simulation duration
 
 %% Kite properties
 % Physical properties
@@ -30,8 +30,8 @@ rudderTable     = buildAirfoilTable('rudder',wingOE,wingAR);
 radius          = 100;
 initSpeed       = 5.735;
 initAzimuth     = 0.01*pi/180;
-initElevation   = 20*pi/180;
-initTwist       = 0;%-22.5*pi/180;
+initElevation   = 30*pi/180;
+initTwist       = -20*pi/180;%-22.5*pi/180;
 initTwistRate   = 0;
 
 %% Water properties
@@ -44,7 +44,8 @@ azimuthSweep    = 60*pi/180; % Path azimuth sweep angle, degrees
 elevationSweep  = 10*pi/180; % Path elevation sweep angle, degrees
 meanAzimuth     = 0*pi/180;
 meanElevation   = 30*pi/180;
-basisParams = [azimuthSweep, elevationSweep, meanAzimuth, meanElevation, radius];
+pathShape  = 2; % 1 for ellipse, 2 for fig 8
+basisParams = [azimuthSweep, elevationSweep, meanAzimuth, meanElevation, radius, pathShape];
 % Reference model
 tauRef          = 0.025; % reference model time constant (s)
 % Model Ref Ctrl Gains
@@ -73,7 +74,6 @@ fprintf('Sim Efficiency: %.1f x Real Time\n',T/toc)
 tsc = signalcontainer(logsout);
 
 %% Plot some things
-basisParams = [azimuthSweep, elevationSweep, meanAzimuth, meanElevation, radius];
 path        = lemOfGerono(linspace(0,1),basisParams);
 tsc.posVec.plot3('LineWidth',1,'Color','b','LineStyle','-','DisplayName','Flight Path')
 daspect([1 1 1])
